@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Sphere Voice</title>
+    <link rel="stylesheet" href="/web/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="stage-panel" aria-label="虚拟人">
+        <div class="stage">
+          <img class="background" src="/raw/emo/%E5%BC%80%E5%BF%83.png" alt="" />
+          <img class="face" data-face alt="开心" />
+          <span class="mouth-overlay" data-mouth aria-hidden="true"></span>
+        </div>
+        <div class="stage-status">
+          <strong data-assistant-line>你好呀，我在这里。</strong>
+          <span data-expression>开心</span>
+        </div>
+      </section>
+
+      <section class="control-panel" aria-label="实时语音">
+        <header>
+          <div>
+            <h1>实时语音虚拟人</h1>
+            <p data-health>检测中</p>
+          </div>
+          <span class="status" data-status data-status-value="idle">未开始</span>
+        </header>
+
+        <div class="actions">
+          <button type="button" data-start>开始</button>
+          <button type="button" data-mute>静音</button>
+          <button type="button" data-interrupt>打断</button>
+          <button type="button" data-end>结束</button>
+        </div>
+
+        <form class="text-form" data-text-form>
+          <input data-text-input type="text" autocomplete="off" placeholder="输入文本" />
+          <button type="submit">发送</button>
+        </form>
+
+        <form class="config" data-config-form>
+          <label>
+            <span>音色</span>
+            <input name="speaker" value="zh_female_vv_jupiter_bigtts" />
+          </label>
+          <label>
+            <span>名称</span>
+            <input name="botName" value="赛博国潮小孩" />
+          </label>
+          <label>
+            <span>开场</span>
+            <input name="openingLine" value="你好呀，我在这里。" />
+          </label>
+          <label>
+            <span>角色</span>
+            <textarea name="systemRole" rows="4">你是一个国潮风格的虚拟人。你会用简短、自然、友好的中文回答，适合实时语音对话。</textarea>
+          </label>
+          <label>
+            <span>风格</span>
+            <textarea name="speakingStyle" rows="3">活泼、清晰、不要太长。</textarea>
+          </label>
+        </form>
+
+        <ol class="events" data-events aria-label="事件"></ol>
+      </section>
+    </main>
+
+    <script type="module" src="/web/app.js"></script>
+  </body>
+</html>
