@@ -71,12 +71,13 @@ textarea {
 }
 
 .mouth-overlay {
+  display: none;
   position: absolute;
-  left: 47.4%;
-  top: 52.6%;
-  width: 5.8%;
-  height: 2.1%;
-  border: 2px solid rgba(55, 13, 44, 0.88);
+  left: 50.45%;
+  top: 57.2%;
+  width: 9.8%;
+  height: 3.2%;
+  border: 3px solid rgba(55, 13, 44, 0.9);
   border-radius: 50% 50% 48% 48%;
   background:
     radial-gradient(circle at 50% 18%, rgba(255, 122, 155, 0.96) 0 22%, transparent 23%),
@@ -95,22 +96,22 @@ textarea {
 }
 
 .mouth-overlay[data-shape="small"] {
-  width: 4.8%;
-  height: 2.4%;
+  width: 9.2%;
+  height: 4.6%;
   opacity: 0.82;
-  transform: translate(-50%, -50%) scaleX(0.78) scaleY(0.58);
+  transform: translate(-50%, -50%) scaleX(0.9) scaleY(0.68);
 }
 
 .mouth-overlay[data-shape="medium"] {
-  width: 5.6%;
-  height: 4.2%;
+  width: 10.8%;
+  height: 7.7%;
   opacity: 0.9;
   transform: translate(-50%, -50%) scaleX(0.9) scaleY(0.9);
 }
 
 .mouth-overlay[data-shape="wide"] {
-  width: 6.2%;
-  height: 6.5%;
+  width: 12.2%;
+  height: 10.8%;
   opacity: 0.96;
   transform: translate(-50%, -50%) scaleX(1) scaleY(1);
 }

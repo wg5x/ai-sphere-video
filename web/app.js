@@ -1,4 +1,5 @@
 import { base64ToArrayBuffer, decodePcm16ToFloat32, encodePcm16, resampleTo16k } from "./audio.js";
+import { createAvatarDriver } from "./avatarDriver.js";
 import { buildMouthCues } from "./lipSync.js";
 
 const FACE_ASSET_BASE = "/outputs/faces/";
@@ -42,8 +43,9 @@ const dom = {
   textInput: document.querySelector("[data-text-input]"),
 };
 
+const avatar = createAvatarDriver((name) => setFaceExpression(name));
+
 setExpression("开心");
-setMouthShape("closed");
 refreshHealth();
 
 dom.startButton.addEventListener("click", () => {
@@ -310,6 +312,10 @@ function setStatus(status) {
 
 function setExpression(name) {
   dom.expression.textContent = name;
+  avatar.setEmotion(name);
+}
+
+function setFaceExpression(name) {
   dom.face.src = `${FACE_ASSET_BASE}${encodeURIComponent(name)}.png`;
   dom.face.alt = name;
 }
@@ -332,7 +338,10 @@ function scheduleMouthCues(samples, audioStartAt) {
 }
 
 function setMouthShape(shape) {
-  dom.mouth.dataset.shape = shape;
+  avatar.setMouthShape(shape);
+  if (dom.mouth) {
+    dom.mouth.dataset.shape = "closed";
+  }
 }
 
 function addEvent(type, text) {
