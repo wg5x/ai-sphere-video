@@ -2,7 +2,6 @@ import { base64ToArrayBuffer, decodePcm16ToFloat32, encodePcm16, resampleTo16k }
 import { createAvatarDriver } from "./avatarDriver.js";
 import { buildMouthCues } from "./lipSync.js";
 
-const FACE_ASSET_BASE = "/outputs/faces/";
 const DEFAULT_CONFIG = {
   speaker: "zh_female_vv_jupiter_bigtts",
   botName: "赛博国潮小孩",
@@ -43,7 +42,7 @@ const dom = {
   textInput: document.querySelector("[data-text-input]"),
 };
 
-const avatar = createAvatarDriver((name) => setFaceExpression(name));
+const avatar = createAvatarDriver((name, frame) => setFaceExpression(name, frame));
 
 setExpression("开心");
 refreshHealth();
@@ -315,9 +314,20 @@ function setExpression(name) {
   avatar.setEmotion(name);
 }
 
-function setFaceExpression(name) {
-  dom.face.src = `${FACE_ASSET_BASE}${encodeURIComponent(name)}.png`;
+function setFaceExpression(name, frame) {
+  const fallbackSrc = frame?.fallbackSrc || `/outputs/faces/${encodeURIComponent(name)}.png`;
+  const assetSrc = frame?.assetSrc || fallbackSrc;
+  dom.face.onerror = assetSrc === fallbackSrc ? null : () => {
+    dom.face.onerror = null;
+    dom.face.src = fallbackSrc;
+  };
+  dom.face.src = assetSrc;
   dom.face.alt = name;
+  if (frame?.assetId) {
+    dom.face.dataset.assetId = frame.assetId;
+  } else {
+    delete dom.face.dataset.assetId;
+  }
 }
 
 function scheduleMouthCues(samples, audioStartAt) {

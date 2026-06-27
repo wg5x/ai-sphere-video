@@ -17,10 +17,80 @@ const SPEAKING_EXPRESSION_BY_EMOTION = {
   难过: { small: "难过", medium: "委屈哭", wide: "大哭" },
 };
 
+const STRUCTURED_FACE_ASSET_BASE = "/outputs/avatar_faces/";
+const LEGACY_FACE_ASSET_BASE = "/outputs/faces/";
+
+const LEGACY_TO_EMOTION = {
+  不满: "angry",
+  大哭: "sad",
+  大笑: "happy",
+  委屈哭: "sad",
+  嫌弃: "angry",
+  开心: "happy",
+  思考: "thinking",
+  惊恐: "surprised",
+  惊讶: "surprised",
+  愤怒: "angry",
+  斜眼惊讶: "surprised",
+  比心眨眼: "happy",
+  生气: "angry",
+  眨眼笑: "happy",
+  眯眼笑: "happy",
+  难过: "sad",
+};
+
+const LEGACY_FALLBACK_BY_ASSET = {
+  happy_closed: "开心",
+  happy_open_small: "眨眼笑",
+  happy_open_wide: "大笑",
+  thinking_closed: "思考",
+  thinking_open_small: "开心",
+  thinking_open_wide: "惊讶",
+  surprised_closed: "惊讶",
+  surprised_open_small: "惊讶",
+  surprised_open_wide: "斜眼惊讶",
+  sad_closed: "难过",
+  sad_open_small: "委屈哭",
+  sad_open_wide: "大哭",
+  angry_closed: "生气",
+  angry_open_small: "愤怒",
+  angry_open_wide: "愤怒",
+};
+
+function buildPngSrc(base, name) {
+  return `${base}${encodeURIComponent(name)}.png`;
+}
+
 export function chooseSpeakingExpression(baseEmotion, mouthShape) {
   if (mouthShape === "closed") return baseEmotion;
   const mapping = SPEAKING_EXPRESSION_BY_EMOTION[baseEmotion] || SPEAKING_EXPRESSION_BY_EMOTION["开心"];
   return mapping[mouthShape] || baseEmotion;
+}
+
+export function normalizeEmotion(expression) {
+  return LEGACY_TO_EMOTION[expression] || "happy";
+}
+
+export function normalizeMouthShape(shape) {
+  if (shape === "small") return "open_small";
+  if (shape === "medium" || shape === "wide") return "open_wide";
+  return "closed";
+}
+
+export function chooseAvatarFrame(baseExpression, realtimeMouthShape) {
+  const emotion = normalizeEmotion(baseExpression);
+  const mouthShape = normalizeMouthShape(realtimeMouthShape);
+  const assetId = `${emotion}_${mouthShape}`;
+  const legacyExpression = LEGACY_FALLBACK_BY_ASSET[assetId] || baseExpression || "开心";
+
+  return {
+    assetId,
+    assetSrc: buildPngSrc(STRUCTURED_FACE_ASSET_BASE, assetId),
+    emotion,
+    fallbackSrc: buildPngSrc(LEGACY_FACE_ASSET_BASE, legacyExpression),
+    legacyExpression,
+    mouthShape,
+  };
 }
 
 export function createAvatarDriver(renderExpression) {
@@ -29,10 +99,13 @@ export function createAvatarDriver(renderExpression) {
   let currentMouthShape = "closed";
 
   function renderNext() {
-    const nextExpression = chooseSpeakingExpression(baseEmotion, currentMouthShape);
-    if (nextExpression === currentExpression) return;
-    currentExpression = nextExpression;
-    renderExpression(nextExpression, { baseEmotion, mouthShape: currentMouthShape });
+    const nextFrame = chooseAvatarFrame(baseEmotion, currentMouthShape);
+    if (nextFrame.assetId === currentExpression) return;
+    currentExpression = nextFrame.assetId;
+    renderExpression(nextFrame.legacyExpression, {
+      ...nextFrame,
+      baseEmotion,
+    });
   }
 
   return {
