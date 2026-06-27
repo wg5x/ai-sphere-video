@@ -201,13 +201,29 @@ p {
 button {
   min-height: 40px;
   border: 1px solid rgba(134, 232, 255, 0.28);
-  background: #123142;
+  background: transparent;
   color: #eefbff;
   cursor: pointer;
 }
 
-button:hover {
-  background: #174459;
+button.primary {
+  border-color: rgba(105, 229, 255, 0.55);
+  background: #1a6f96;
+}
+
+button:hover:not(:disabled) {
+  background: rgba(23, 68, 89, 0.72);
+}
+
+button.primary:hover:not(:disabled) {
+  background: #2084b3;
+}
+
+button:disabled {
+  border-color: rgba(134, 232, 255, 0.14);
+  background: transparent;
+  color: rgba(238, 251, 255, 0.34);
+  cursor: not-allowed;
 }
 
 input,
@@ -222,6 +238,12 @@ textarea {
 input {
   height: 40px;
   padding: 0 11px;
+}
+
+input:disabled,
+textarea:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 textarea {

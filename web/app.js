@@ -37,6 +37,7 @@ const dom = {
   interruptButton: document.querySelector("[data-interrupt]"),
   muteButton: document.querySelector("[data-mute]"),
   mouth: document.querySelector("[data-mouth]"),
+  sendButton: document.querySelector("[data-send]"),
   startButton: document.querySelector("[data-start]"),
   status: document.querySelector("[data-status]"),
   textForm: document.querySelector("[data-text-form]"),
@@ -48,30 +49,35 @@ const avatar = createAvatarDriver((name, frame) => setFaceExpression(name, frame
 setExpression("开心");
 refreshHealth();
 startV2SamplePreviewIfRequested();
+updateControls();
 
 dom.startButton.addEventListener("click", () => {
+  if (dom.startButton.disabled) return;
   void startCall();
 });
 
 dom.endButton.addEventListener("click", () => {
+  if (dom.endButton.disabled) return;
   endCall();
 });
 
 dom.interruptButton.addEventListener("click", () => {
+  if (dom.interruptButton.disabled) return;
   interrupt();
 });
 
 dom.muteButton.addEventListener("click", () => {
+  if (dom.muteButton.disabled) return;
   state.muted = !state.muted;
   state.uploadReady = !state.muted && state.socket?.readyState === WebSocket.OPEN && dom.status.dataset.status === "connected";
   dom.muteButton.textContent = state.muted ? "恢复" : "静音";
-  setStatus(state.muted ? "muted" : dom.status.dataset.status || "idle");
+  setStatus(state.muted ? "muted" : "connected");
 });
 
 dom.textForm.addEventListener("submit", (event) => {
   event.preventDefault();
   const text = dom.textInput.value.trim();
-  if (!text || state.socket?.readyState !== WebSocket.OPEN) return;
+  if (!text || dom.sendButton.disabled || state.socket?.readyState !== WebSocket.OPEN) return;
   setExpression("思考");
   state.socket.send(JSON.stringify({ type: "user_text", text }));
   dom.textInput.value = "";
@@ -193,6 +199,7 @@ function endCall() {
   const ws = state.socket;
   state.socket = null;
   state.uploadReady = false;
+  state.muted = false;
   state.playbackMuted = true;
   stopPlayback();
   stopMicrophone();
@@ -204,6 +211,7 @@ function endCall() {
   if (ws?.readyState === WebSocket.OPEN || ws?.readyState === WebSocket.CONNECTING) {
     ws.close();
   }
+  setStatus("idle");
 }
 
 function interrupt() {
@@ -309,6 +317,24 @@ function setStatus(status) {
     muted: "已静音",
   };
   dom.status.textContent = labels[status] || status;
+  updateControls();
+}
+
+function updateControls() {
+  const status = dom.status.dataset.status || "idle";
+  const inCall = status === "connected" || status === "muted";
+  const canCancel = status === "connecting" || inCall;
+
+  dom.startButton.disabled = status !== "idle";
+  dom.muteButton.disabled = !inCall;
+  dom.interruptButton.disabled = !inCall;
+  dom.endButton.disabled = !canCancel;
+  dom.sendButton.disabled = !inCall;
+  dom.textInput.disabled = !inCall;
+
+  dom.startButton.classList.toggle("primary", status === "idle");
+  dom.sendButton.classList.toggle("primary", inCall);
+  dom.muteButton.textContent = state.muted && inCall ? "恢复" : "静音";
 }
 
 function setExpression(name) {

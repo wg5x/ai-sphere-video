@@ -43,6 +43,7 @@ class RealtimeDoubaoTests(unittest.TestCase):
         self.assertEqual(payload["tts"]["audio_config"]["sample_rate"], 24000)
         self.assertEqual(payload["dialog"]["bot_name"], "赛博国潮小孩")
         self.assertEqual(payload["dialog"]["extra"]["model"], "1.2.1.1")
+        self.assertEqual(payload["dialog"]["extra"]["input_mod"], "keep_alive")
 
     def test_expression_picker_prefers_strong_emotion_keywords(self):
         self.assertEqual(pick_expression("哈哈哈太开心了", role="assistant"), "大笑")
