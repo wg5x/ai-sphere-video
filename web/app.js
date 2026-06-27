@@ -2,6 +2,7 @@ import { base64ToArrayBuffer, decodePcm16ToFloat32, encodePcm16, resampleTo16k }
 import { createAvatarDriver } from "./avatarDriver.js";
 import { buildMouthCues } from "./lipSync.js";
 
+const APP_BASE_URL = getAppBaseUrl();
 const DEFAULT_CONFIG = {
   speaker: "zh_female_vv_jupiter_bigtts",
   botName: "赛博国潮小孩",
@@ -46,6 +47,7 @@ const avatar = createAvatarDriver((name, frame) => setFaceExpression(name, frame
 
 setExpression("开心");
 refreshHealth();
+startV2SamplePreviewIfRequested();
 
 dom.startButton.addEventListener("click", () => {
   void startCall();
@@ -77,7 +79,7 @@ dom.textForm.addEventListener("submit", (event) => {
 
 async function refreshHealth() {
   try {
-    const response = await fetch("/health");
+    const response = await fetch(getAppUrl("health"));
     const body = await response.json();
     dom.health.textContent = body.volcengine ? "豆包配置已加载" : "未配置豆包密钥";
   } catch {
@@ -100,7 +102,7 @@ async function startCall() {
     return;
   }
 
-  const ws = new WebSocket(getWsUrl("/realtime"));
+  const ws = new WebSocket(getWsUrl("realtime"));
   ws.binaryType = "arraybuffer";
   state.socket = ws;
 
@@ -319,9 +321,9 @@ function setFaceExpression(name, frame) {
   const assetSrc = frame?.assetSrc || fallbackSrc;
   dom.face.onerror = assetSrc === fallbackSrc ? null : () => {
     dom.face.onerror = null;
-    dom.face.src = fallbackSrc;
+    dom.face.src = getAppUrl(fallbackSrc);
   };
-  dom.face.src = assetSrc;
+  dom.face.src = getAppUrl(assetSrc);
   dom.face.alt = name;
   if (frame?.assetId) {
     dom.face.dataset.assetId = frame.assetId;
@@ -352,6 +354,29 @@ function setMouthShape(shape) {
   if (dom.mouth) {
     dom.mouth.dataset.shape = "closed";
   }
+}
+
+function startV2SamplePreviewIfRequested() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("v2sample") !== "1") return;
+
+  const expressions = ["开心", "思考", "生气"];
+  const mouthShapes = ["closed", "tiny", "small", "medium", "large", "wide", "large", "medium", "small", "tiny"];
+  let expressionIndex = 0;
+  let mouthIndex = 0;
+
+  dom.assistantLine.textContent = "v2 小样预览：开心 / 思考 / 生气";
+  setExpression(expressions[expressionIndex]);
+
+  window.setInterval(() => {
+    setMouthShape(mouthShapes[mouthIndex]);
+    mouthIndex += 1;
+    if (mouthIndex < mouthShapes.length) return;
+
+    mouthIndex = 0;
+    expressionIndex = (expressionIndex + 1) % expressions.length;
+    setExpression(expressions[expressionIndex]);
+  }, 240);
 }
 
 function addEvent(type, text) {
@@ -388,8 +413,22 @@ function getMicrophoneFailureText(error) {
   return "麦克风启动失败";
 }
 
+function getAppBaseUrl() {
+  const pathname = window.location.pathname;
+  if (pathname.endsWith("/")) return new URL(pathname, window.location.origin);
+  const basename = pathname.slice(pathname.lastIndexOf("/") + 1);
+  const basePath = basename.includes(".") ? pathname.replace(/[^/]*$/, "") : `${pathname}/`;
+  return new URL(basePath || "/", window.location.origin);
+}
+
+function getAppUrl(path) {
+  const value = String(path || "");
+  if (/^(?:https?:|wss?:|data:|blob:)/.test(value)) return value;
+  return new URL(value.replace(/^\/+/, ""), APP_BASE_URL).toString();
+}
+
 function getWsUrl(path) {
-  const url = new URL(path, window.location.href);
+  const url = new URL(String(path || "").replace(/^\/+/, ""), APP_BASE_URL);
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   return url.toString();
 }

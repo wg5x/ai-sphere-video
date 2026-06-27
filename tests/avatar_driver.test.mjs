@@ -58,3 +58,17 @@ test("chooseAvatarFrame returns structured asset id and legacy fallback", () => 
     },
   );
 });
+
+test("chooseAvatarFrame uses v2 sample assets for available preview expressions", () => {
+  assert.deepEqual(
+    chooseAvatarFrame("开心", "large"),
+    {
+      assetId: "v2_sample_开心_mouth_04_large",
+      assetSrc: "/outputs/avatar_faces_v2_sample/%E5%BC%80%E5%BF%83/mouth_04_large.png",
+      emotion: "happy",
+      fallbackSrc: "/outputs/faces/%E5%A4%A7%E7%AC%91.png",
+      legacyExpression: "大笑",
+      mouthShape: "mouth_04_large",
+    },
+  );
+});

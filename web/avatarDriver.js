@@ -18,7 +18,17 @@ const SPEAKING_EXPRESSION_BY_EMOTION = {
 };
 
 const STRUCTURED_FACE_ASSET_BASE = "/outputs/avatar_faces/";
+const V2_SAMPLE_FACE_ASSET_BASE = "/outputs/avatar_faces_v2_sample/";
 const LEGACY_FACE_ASSET_BASE = "/outputs/faces/";
+const V2_SAMPLE_EXPRESSIONS = new Set(["开心", "思考", "生气"]);
+const V2_SAMPLE_MOUTH_BY_REALTIME = {
+  closed: "mouth_00_closed",
+  tiny: "mouth_01_tiny",
+  small: "mouth_02_small",
+  medium: "mouth_03_medium",
+  large: "mouth_04_large",
+  wide: "mouth_05_wide",
+};
 
 const LEGACY_TO_EMOTION = {
   不满: "angry",
@@ -61,6 +71,10 @@ function buildPngSrc(base, name) {
   return `${base}${encodeURIComponent(name)}.png`;
 }
 
+function buildNestedPngSrc(base, directory, name) {
+  return `${base}${encodeURIComponent(directory)}/${encodeURIComponent(name)}.png`;
+}
+
 export function chooseSpeakingExpression(baseEmotion, mouthShape) {
   if (mouthShape === "closed") return baseEmotion;
   const mapping = SPEAKING_EXPRESSION_BY_EMOTION[baseEmotion] || SPEAKING_EXPRESSION_BY_EMOTION["开心"];
@@ -77,8 +91,29 @@ export function normalizeMouthShape(shape) {
   return "closed";
 }
 
+function normalizeLegacyMouthShape(shape) {
+  if (shape === "tiny") return "small";
+  if (shape === "large") return "wide";
+  return shape;
+}
+
 export function chooseAvatarFrame(baseExpression, realtimeMouthShape) {
   const emotion = normalizeEmotion(baseExpression);
+  if (V2_SAMPLE_EXPRESSIONS.has(baseExpression)) {
+    const mouthShape = V2_SAMPLE_MOUTH_BY_REALTIME[realtimeMouthShape] || V2_SAMPLE_MOUTH_BY_REALTIME.closed;
+    const legacyMouthShape = normalizeLegacyMouthShape(realtimeMouthShape);
+    const legacyExpression = chooseSpeakingExpression(baseExpression, legacyMouthShape);
+
+    return {
+      assetId: `v2_sample_${baseExpression}_${mouthShape}`,
+      assetSrc: buildNestedPngSrc(V2_SAMPLE_FACE_ASSET_BASE, baseExpression, mouthShape),
+      emotion,
+      fallbackSrc: buildPngSrc(LEGACY_FACE_ASSET_BASE, legacyExpression),
+      legacyExpression,
+      mouthShape,
+    };
+  }
+
   const mouthShape = normalizeMouthShape(realtimeMouthShape);
   const assetId = `${emotion}_${mouthShape}`;
   const legacyExpression = LEGACY_FALLBACK_BY_ASSET[assetId] || baseExpression || "开心";
